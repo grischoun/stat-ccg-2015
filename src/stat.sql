@@ -330,3 +330,10 @@ FROM (SELECT *, CASE WHEN team_score > opponent_score THEN color1
 WHERE winner_color  NOTNULL
 GROUP BY rink, winner_color
 order by rink asc, winner_color
+
+
+-- name: scores
+-- # a summary on which to base all the statistics around scores
+select team_score, opponent_score, team_score + opponent_score AS total_score, abs(team_score - opponent_score) as delta_score,
+  team_ends, opponent_ends, played_ends_count
+FROM ENDS_PIERRES;

@@ -111,3 +111,17 @@
 ;; (def plot-sheet-a (plot-sheet "A"))
 ;; (def sheet-a-x (x-axis-for sheet-a)) ;; x axis for sheet a
 ;; (def sheet-a-y (map (fn [x] (:count x)) sheet-a)) ;; y axis for sheet a
+
+
+;; scores
+;;
+
+;; sum of team's and opponent's score
+(defn total-score
+  []
+  (vec (map #(:total_score %) (scores))))
+
+;; delta of team's and opponent's score
+(defn delta-score
+  []
+  (vec (map #(:delta_score %) (scores))))
