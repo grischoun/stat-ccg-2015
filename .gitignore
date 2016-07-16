@@ -10,3 +10,8 @@ pom.xml.asc
 .lein-plugins/
 .lein-failures
 .nrepl-port
+/.DS_Store
+/.gorilla-port
+/.gitignore
+/target/base+system+user+dev/classes/META-INF/maven/gorilla-test/gorilla-test/pom.properties
+/src/db-spec.clj
