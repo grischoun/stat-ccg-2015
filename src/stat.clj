@@ -90,7 +90,7 @@
 
 
 ;; stone color wins per sheet
-(def stone-color-res (stone-color-per-sheet ))
+(def stone-color-res (stone-color-per-sheet))
 (defn sheet-res
   "Returns the rows for sheet x"
   [x]
@@ -118,10 +118,14 @@
 
 ;; sum of team's and opponent's score
 (defn total-score
-  []
-  (vec (map #(:total_score %) (scores))))
+  [league]
+  (vec (map #(:total_score %) (cond
+                                (= "ALL" league) (scores)
+                                (= "A" league) (scores-league-x)))))
 
 ;; delta of team's and opponent's score
 (defn delta-score
-  []
-  (vec (map #(:delta_score %) (scores))))
+  [league]
+  (vec (map #(:delta_score %) (cond
+                                (= "ALL" league) (scores)
+                                (= "A" league) (scores-league-x)))))

@@ -148,6 +148,83 @@ CREATE OR REPLACE VIEW ENDS_V AS
     JOIN ends ON m.match_id = ends.match_id
   WHERE competition_id = 16 AND ends.score <> -1 AND ends.end_num > 0;
 
+
+-- DROP VIEW SCORES;
+
+-- The difference between this and ENDS_PIERRES is that here we show only *one* entry per match
+-- (whereas ENDS_PIERRES shows two entries per match: one for team_1 and one for team_2
+CREATE OR REPLACE VIEW SCORES AS
+  SELECT tournaments.id as tourn_id, matches.id as Match,
+                   team_instances.id as team_instance_id,
+                   team_instances.desc as equipes,
+                   -- current team stones for current match
+                   CASE WHEN SUM(ends.score) IS NULL THEN 0
+                        ELSE SUM(ends.score)
+                        END AS team_score,
+                   -- current team stones for current match (excluding stones for extra ends)
+                   (SELECT CASE WHEN SUM(e2.score) IS NULL THEN 0
+                           ELSE SUM(e2.score)
+                           END
+                    FROM matches m2 inner join ends e2 ON e2.match_id = m2.id
+                    WHERE e2.team_instance_id = team_instances.id AND m2.id = matches.id
+                          -- exclude extra ends
+                          AND e2.end_num <= number_of_ends
+                    ) as team_score_without_extra_ends,
+                   -- opponent team score for current match
+                   (select CASE WHEN SUM(e2.score) IS NULL THEN 0
+                           ELSE SUM(e2.score)
+                           END
+                    from matches m2 inner join ends e2 on e2.match_id = m2.id
+                    where e2.team_instance_id <> team_instances.id and m2.id = matches.id) as opponent_score,
+                   -- sets if match is (being) played or not
+                   CASE WHEN (select COUNT(e2.id)
+                              from matches m2
+                              inner join ends e2 on e2.match_id = m2.id and
+                                                    matches.id = m2.id) > 0 THEN 1
+                        ELSE 0
+                        END AS match_played,
+                   -- number of ends played for current match
+                   (select CASE WHEN COUNT(e2.id) IS NULL THEN 0
+                           ELSE COUNT(e2.id)
+                           END
+                    from matches m2 inner join ends e2 on matches.id = m2.id AND e2.match_id = m2.id) as played_ends_count,
+                   -- round num
+                   round_num,
+                   team_1_id,
+                   team_2_id,
+                   CASE WHEN matches.color_1 LIKE '%yellow%' THEN 'yellow'
+                        WHEN lower(matches.color_1) LIKE '%#ffc900%' THEN 'yellow'
+                        WHEN matches.color_1 LIKE '%#ffff00%' THEN 'yellow'
+                        WHEN matches.color_1 LIKE '%red%' THEN 'red'
+                        WHEN matches.color_1 LIKE '%#ff0000%' THEN 'red'
+                        WHEN matches.color_1 LIKE '%#ff6000%' THEN 'red'
+                        ELSE matches.color_1
+                        END
+                   as color1,
+                   CASE WHEN matches.color_2 LIKE '%yellow%' THEN 'yellow'
+                        WHEN lower(matches.color_2) LIKE '%#ffc900%' THEN 'yellow'
+                        WHEN matches.color_2 LIKE '%#ffff00%' THEN 'yellow'
+                        WHEN matches.color_2 LIKE '%red%' THEN 'red'
+                        WHEN matches.color_2 LIKE '%#ff0000%' THEN 'red'
+                        WHEN lower(matches.color_2) LIKE '%#ff6000%' THEN 'red'
+                        ELSE matches.color_2
+                        END
+                   as color2,
+                   rink
+            FROM tournaments
+                 INNER JOIN rounds ON rounds.tournament_id = tournaments.id
+                 INNER JOIN groups ON groups.round_id = rounds.id
+                 INNER JOIN matches ON matches.group_id = groups.id
+                 INNER JOIN team_instances ON matches.team_1_id = team_instances.id
+                 INNER JOIN teams ON teams.id = team_instances.team_id
+                 LEFT JOIN ends ON (ends.team_instance_id = team_instances.id AND matches.id = ends.match_id)
+                 INNER JOIN match_configurations on matches.match_configuration_id = match_configurations.id
+            WHERE tournaments.competition_id = 16 AND ends.score <> -1 AND ends.end_num > 0 AND matches.end_info_available = true
+            GROUP BY tournaments.id, matches.id, team_instances.id, number_of_ends, round_num;
+
+
+
+
 -- DROP VIEW END_COUNT;
 
 CREATE OR REPLACE VIEW END_COUNT AS
@@ -334,6 +411,14 @@ order by rink asc, winner_color
 
 -- name: scores
 -- # a summary on which to base all the statistics around scores
-select team_score, opponent_score, team_score + opponent_score AS total_score, abs(team_score - opponent_score) as delta_score,
-  team_ends, opponent_ends, played_ends_count
-FROM ENDS_PIERRES;
+select team_score, opponent_score, (team_score + opponent_score) AS total_score, abs(team_score - opponent_score) as delta_score
+FROM SCORES;
+
+
+-- name: scores-league-x
+select team_score, opponent_score, (team_score + opponent_score) AS total_score, abs(team_score - opponent_score) as delta_score
+FROM SCORES
+WHERE tourn_id = 199;
+
+
+-- select * from ENDS_PIERRES where tourn_id = 199;
