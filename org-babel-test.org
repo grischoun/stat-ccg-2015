@@ -1,0 +1,49 @@
+** TOTAL SCORES
+
+#+begin_src clojure :results none :exports none
+(ns stat)
+(use '(incanter core charts pdf))
+#+end_src
+
+#+begin_src clojure :results none :exports none
+(def histo (custom-incanter/hist (total-score "ALL") "Total Score - Toutes les ligues"))
+(view histo)
+(save histo "./img/total-all.png")
+#+end_src
+
+#+begin_src clojure :results none :exports none
+(def histo (custom-incanter/hist (total-score "A") "Total Score - Ligue A"))
+(view histo)
+(save histo "./img/total-A.png")
+#+end_src
+
+
+[[./img/total-all.png]][[./img/total-A.png]]
+
+** DELTA SCORES
+
+#+begin_src clojure :results none :exports none
+(ns stat)
+(use '(incanter core charts pdf))
+(def histo (custom-incanter/hist (delta-score "ALL") "Delta Score - Toutes les ligues"))
+(view histo)
+(save histo "./img/delta-all.png")
+#+end_src
+
+#+CAPTION: "Delta Score - Toutes les ligues"
+
+#+NAME: fig:total-score-all
+[[./img/delta-all.png]]
+
+
+#+begin_src clojure :results none :exports none
+(ns stat)
+(use '(incanter core charts pdf))
+(def histo (custom-incanter/hist (delta-score "A") "Delta Score - Ligue A"))
+(view histo)
+(save histo "./img/delta-A.png")
+#+end_src
+
+#+CAPTION: "Delta Score - Ligue A"
+#+NAME: fig:total-score-all
+[[./img/delta-A.png]]

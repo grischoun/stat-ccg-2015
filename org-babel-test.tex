@@ -1,0 +1,83 @@
+% Created 2016-07-19 Tue 18:54
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\author{Chrislain}
+\date{\today}
+\title{}
+\hypersetup{
+ pdfauthor={Chrislain},
+ pdftitle={},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 24.5.1 (Org mode 8.3beta)},
+ pdflang={English}}
+\begin{document}
+
+\tableofcontents
+
+\section{TOTAL SCORES}
+\label{sec:org9169166}
+
+\begin{verbatim}
+(ns stat)
+(use '(incanter core charts pdf))
+(def histo (custom-incanter/hist (total-score "ALL") "Total Score - Toutes les ligues"))
+(view histo)
+(save histo "./img/total-all.png")
+\end{verbatim}
+
+\includegraphics[width=.9\linewidth]{./img/total-all.png}
+
+
+\begin{verbatim}
+(ns stat)
+(use '(incanter core charts pdf))
+(def histo (custom-incanter/hist (total-score "A") "Total Score - Ligue A"))
+(view histo)
+(save histo "./img/total-A.png")
+\end{verbatim}
+
+\includegraphics[width=.9\linewidth]{./img/total-A.png}
+
+\section{DELTA SCORES}
+\label{sec:org22f4c0d}
+
+\begin{verbatim}
+(ns stat)
+(use '(incanter core charts pdf))
+(def histo (custom-incanter/hist (delta-score "ALL") "Delta Score - Toutes les ligues"))
+(view histo)
+(save histo "./img/delta-all.png")
+\end{verbatim}
+
+\includegraphics[width=.9\linewidth]{./img/delta-all.png}
+
+
+\begin{verbatim}
+(ns stat)
+(use '(incanter core charts pdf))
+(def histo (custom-incanter/hist (delta-score "A") "Delta Score - Ligue A"))
+(view histo)
+(save histo "./img/delta-A.png")
+\end{verbatim}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=.9\linewidth]{./img/delta-A.png}
+\caption{\label{fig:orge6364e7}
+"Delta Score - Ligue A"}
+\end{figure}
+\end{document}
