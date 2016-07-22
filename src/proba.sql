@@ -1,5 +1,5 @@
 
-DROP  FUNCTION public.total_score(m_id integer, end_id integer, team_id INTEGER) CASCADE ;
+-- DROP FUNCTION public.total_score(m_id integer, end_id integer, team_id INTEGER) CASCADE ;
 
 CREATE OR REPLACE FUNCTION total_score(m_id integer, team_id INTEGER) RETURNS BIGINT AS
 $$
@@ -12,9 +12,8 @@ where ends.team_instance_id = team_id and matches.id = m_id;
 --where ends.team_instance_id = 4995 and matches.id = 14510;
 $$ LANGUAGE SQL;
 
-select total_score(14510, 12, 4995);
 
-DROP VIEW MATCH_ENDS;
+-- DROP VIEW MATCH_ENDS;
 
 CREATE OR REPLACE VIEW MATCH_ENDS AS
             SELECT tournaments.id as tourn_id, matches.id as Match,
