@@ -1,3 +1,12 @@
+
+** PROBABILITE
+
+*** de gagner un match en mettant au moins une fois un coup de 3
+
+matches qui contiennent un coup de 3 pour une équipe donnée et l'équipe donnée a gagné le match
+-----------------------------------------------------------------------
+ts ls matches qui contiennent un coup de 3
+
 ** TOTAL SCORES
 
 #+begin_src clojure :results none :exports none
