@@ -13,21 +13,32 @@ where ends.team_instance_id = team_id and matches.id = m_id;
 $$ LANGUAGE SQL;
 
 
--- DROP VIEW MATCH_ENDS;
+DROP VIEW MATCH_ENDS;
 
+--
 CREATE OR REPLACE VIEW MATCH_ENDS AS
-            SELECT tournaments.id as tourn_id, matches.id as Match,
-                   team_instances.id as team_instance_id,
-                   team_instances.desc as equipes,
-                   ends.end_num,
+  WITH scores as (select
+                    CASE WHEN SUM(score) IS NULL THEN 0
+                    ELSE SUM(score)
+                    END as team_score,
+                    m.id as m_id,
+                    e.team_instance_id as team_id
+                  from matches m
+                    inner join ends e on e.match_id = m.id
+                  GROUP BY m.id, e.team_instance_id)
+  SELECT tournaments.id as tourn_id,
+    matches.id as Match,
+    team_instances.id as team_instance_id,
+    team_instances.desc as team_1_name,
+    ends.end_num,
               -- team score for current match
-              (select total_score(matches.id, matches.team_1_id)) as team_score,
+              team_1_score,
               -- opponent team score for current match
-              (select total_score(matches.id, matches.team_2_id)) as opponent_score,
+              opponent_score,
               -- won or not
-              CASE when total_score(matches.id, matches.team_1_id) > total_score(matches.id, matches.team_2_id) then 1
-              WHEN total_score(matches.id, matches.team_1_id) = total_score(matches.id, matches.team_2_id) then 0
-              ELSE -1
+              CASE when team_1_score > opponent_score then 1
+              WHEN team_1_score < opponent_score then -1
+              ELSE 0
               END as won,
                    -- current team ends for current match (excluding ends for extra ends)
                    (SELECT CASE WHEN COUNT(e2.id) IS NULL THEN 0
@@ -101,9 +112,25 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
                  INNER JOIN teams ON teams.id = team_instances.team_id
                  LEFT JOIN ends ON (matches.id = ends.match_id)
                  INNER JOIN match_configurations on matches.match_configuration_id = match_configurations.id
+              INNER JOIN (SELECT team_score as team_1_score, * from scores) as temp_scores
+                on temp_scores.m_id = matches.id and matches.team_1_id = temp_scores.team_id
+              INNER JOIN (SELECT team_score as opponent_score, * from scores) as temp_scores_2
+                on temp_scores_2.m_id = matches.id and matches.team_2_id = temp_scores_2.team_id
             WHERE tournaments.competition_id = 16 AND ends.end_num > 0 AND matches.end_info_available = true;
 
 SELECT * From MATCH_ENDS
 where match = 14510;
 
 select * FROM team_instances where id = 4995;
+
+
+select
+--   CASE WHEN SUM(score) IS NULL THEN 0
+--   ELSE SUM(score)
+--   END as team_score,
+  m.id as m_id,
+  m.team_1_id as m_team_1_id,
+  e.*
+from matches m
+  inner join ends e on m.team_1_id = e.team_instance_id and e.match_id = m.id
+where m.team_1_id = 4995
