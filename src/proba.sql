@@ -13,7 +13,7 @@ where ends.team_instance_id = team_id and matches.id = m_id;
 $$ LANGUAGE SQL;
 
 
-DROP VIEW MATCH_ENDS;
+DROP VIEW MATCH_ENDS CASCADE ;
 
 --
 CREATE OR REPLACE VIEW MATCH_ENDS AS
@@ -33,6 +33,7 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
     opponent_name,
     ends.end_num,
     ends.score as end_score,
+    end_winner_id,
     -- team score for current match
     team_1_score,
     -- opponent team score for current match
@@ -119,6 +120,8 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
       ON teams.id = team_instances.team_id
     LEFT JOIN ends
       ON (matches.id = ends.match_id)
+    LEFT JOIN (select team_instances.id as end_winner_id from team_instances) as team_instances_3
+      ON end_winner_id = ends.team_instance_id
     INNER JOIN match_configurations
       on matches.match_configuration_id = match_configurations.id
     INNER JOIN (SELECT team_score as team_1_score, * from scores) as temp_scores
@@ -127,27 +130,30 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
       on temp_scores_2.m_id = matches.id and matches.team_2_id = temp_scores_2.team_id
     INNER JOIN (SELECT team_instances."desc" as opponent_name, team_instances.id from team_instances) as team_instances_2
       on team_instances_2.id = matches.team_2_id
-  WHERE tournaments.competition_id = 16 AND ends.end_num > 0 AND matches.end_info_available = true;
+  WHERE          tournaments.competition_id = 16 -- and tournaments.id = 199
+        AND ends.end_num > 0 AND matches.end_info_available = true;
 
 
 
 DROP VIEW MATCH_END_SCORES;
 
 create or REPLACE view MATCH_END_SCORES as
-  SELECT match, end_score, won From MATCH_ENDS
+  SELECT match, end_score, end_winner_id, team_1_id, won as team_1_won_match From MATCH_ENDS
   --where end_score = 3
   --  where match = 14516
-  GROUP BY match, end_score, won;
+  GROUP BY match, end_score, end_winner_id, team_1_id, won;
 
 
 -- Nbre de matches ou il y a eu au moins 1 coup de 3
 SELECT count(match)
 from MATCH_END_SCORES
-where end_score = 3;
+where end_score = 2;
 
 
 -- Nbre de matches ou celui qui a marque un coup de 3 a aussi gagne le match
-
+select count(match)
+FROM MATCH_END_SCORES
+where end_score = 2 and ((end_winner_id = team_1_id and team_1_won_match = 1) or (end_winner_id != team_1_id and team_1_won_match = -1)) ;
 
 
 
