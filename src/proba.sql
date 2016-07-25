@@ -32,6 +32,7 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
     team_instances.desc as team_1_name,
     opponent_name,
     ends.end_num,
+    ends.score as end_score,
     -- team score for current match
     team_1_score,
     -- opponent team score for current match
@@ -130,7 +131,7 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
 
 
 SELECT * From MATCH_ENDS
-where match = 14510;
+--where match = 14510;
 
 select * FROM team_instances where id = 4995;
 
