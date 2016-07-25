@@ -145,7 +145,7 @@ create or REPLACE view MATCH_END_SCORES as
   GROUP BY match, end_score, end_winner_id, team_1_id, won;
 
 
--- select truth_.true_stmts / total.universe as res
+-- computes the probablity of winning a game if we scored X in any end.
 select true_stmts, universe, true_stmts::FLOAT / universe as probability
 from
   (SELECT count(match) as universe
