@@ -130,8 +130,8 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
       on temp_scores_2.m_id = matches.id and matches.team_2_id = temp_scores_2.team_id
     INNER JOIN (SELECT team_instances."desc" as opponent_name, team_instances.id from team_instances) as team_instances_2
       on team_instances_2.id = matches.team_2_id
-  WHERE          tournaments.competition_id = 16 -- and tournaments.id = 199
-        AND ends.end_num > 0 AND matches.end_info_available = true;
+  WHERE   --       tournaments.competition_id = 16 and tournaments.id = 199 AND
+         ends.end_num > 0 AND matches.end_info_available = true;
 
 
 
@@ -144,16 +144,17 @@ create or REPLACE view MATCH_END_SCORES as
   GROUP BY match, end_score, end_winner_id, team_1_id, won;
 
 
--- Nbre de matches ou il y a eu au moins 1 coup de 3
-SELECT count(match)
-from MATCH_END_SCORES
-where end_score = 2;
-
-
--- Nbre de matches ou celui qui a marque un coup de 3 a aussi gagne le match
-select count(match)
-FROM MATCH_END_SCORES
-where end_score = 2 and ((end_winner_id = team_1_id and team_1_won_match = 1) or (end_winner_id != team_1_id and team_1_won_match = -1)) ;
+-- select truth_.true_stmts / total.universe as res
+select true_stmts, universe, true_stmts::FLOAT / universe as probability
+from
+  (SELECT count(match) as universe
+                from MATCH_END_SCORES
+                where end_score = 7) as total,
+  (select count(match) as true_stmts
+            FROM MATCH_END_SCORES
+            where end_score = 7 and ((end_winner_id = team_1_id and team_1_won_match = 1) or
+                                     (end_winner_id != team_1_id and team_1_won_match = -1))) as truth_
+GROUP BY universe, true_stmts;
 
 
 
