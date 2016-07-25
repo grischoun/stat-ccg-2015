@@ -130,6 +130,27 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
   WHERE tournaments.competition_id = 16 AND ends.end_num > 0 AND matches.end_info_available = true;
 
 
+
+DROP VIEW MATCH_END_SCORES;
+
+create or REPLACE view MATCH_END_SCORES as
+  SELECT match, end_score, won From MATCH_ENDS
+  --where end_score = 3
+  --  where match = 14516
+  GROUP BY match, end_score, won;
+
+
+-- Nbre de matches ou il y a eu au moins 1 coup de 3
+SELECT count(match)
+from MATCH_END_SCORES
+where end_score = 3;
+
+
+-- Nbre de matches ou celui qui a marque un coup de 3 a aussi gagne le match
+
+
+
+
 SELECT * From MATCH_ENDS
 --where match = 14510;
 
