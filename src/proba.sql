@@ -128,7 +128,8 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
       on temp_scores.m_id = matches.id and matches.team_1_id = temp_scores.team_id
     INNER JOIN (SELECT team_score as opponent_score, * from scores) as temp_scores_2
       on temp_scores_2.m_id = matches.id and matches.team_2_id = temp_scores_2.team_id
-    INNER JOIN (SELECT team_instances."desc" as opponent_name, team_instances.id from team_instances) as team_instances_2
+    INNER JOIN (SELECT team_instances."desc" as opponent_name, team_instances.id
+                from team_instances) as team_instances_2
       on team_instances_2.id = matches.team_2_id
   WHERE   --       tournaments.competition_id = 16 and tournaments.id = 199 AND
          ends.end_num > 0 AND matches.end_info_available = true;
