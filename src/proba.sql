@@ -25,7 +25,23 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
                     e.team_instance_id as team_id
                   from matches m
                     inner join ends e on e.match_id = m.id
-                  GROUP BY m.id, e.team_instance_id)
+                  GROUP BY m.id, e.team_instance_id),
+    score_deltas as (select
+                       CASE WHEN SUM(e2.score) IS NULL THEN 0
+                       ELSE SUM(e2.score)
+                       END as team_score,
+                       m.id as m_id,
+                       e.team_instance_id as team_id,
+                       e.end_num
+--                       , e2.end_num AS end_num_2, e2.score
+                     from matches m
+                       inner join ends e on e.match_id = m.id
+                       INNER JOIN ends e2 on e2.match_id = m.id and e2.end_num <= e.end_num and e2.team_instance_id = e.team_instance_id
+                     where m.id = 1
+                     GROUP BY m.id, e.team_instance_id, e.id --, e2.id
+
+
+    )
   SELECT tournaments.id as tourn_id,
     matches.id as Match,
     team_instances.id as team_instance_id,
@@ -38,11 +54,13 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
     team_1_score,
     -- opponent team score for current match
     opponent_score,
-    -- won or not
+    -- team 1 won or not
     CASE when team_1_score > opponent_score then 1
     WHEN team_1_score < opponent_score then -1
     ELSE 0
-    END as won,
+    END as team_1_won,
+    -- team_1 score - team_2 score at the current end.
+    score_delta,
     -- current team ends for current match (excluding ends for extra ends)
     (SELECT CASE WHEN COUNT(e2.id) IS NULL THEN 0
     ELSE COUNT(e2.id)
@@ -106,7 +124,9 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
     ELSE matches.color_2
     END
       as color2,
-    rink
+    rink,
+    --- testing
+    ends.end_num as end_num_test
   FROM tournaments
     INNER JOIN rounds
       ON rounds.tournament_id = tournaments.id
@@ -128,21 +148,24 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
       on temp_scores.m_id = matches.id and matches.team_1_id = temp_scores.team_id
     INNER JOIN (SELECT team_score as opponent_score, * from scores) as temp_scores_2
       on temp_scores_2.m_id = matches.id and matches.team_2_id = temp_scores_2.team_id
+    INNER JOIN (SELECT team_score as score_delta, * from scores where scores.end_num <= end_num_test) as temp_scores_3
+      ON temp_scores_3.m_id = matches.id
     INNER JOIN (SELECT team_instances."desc" as opponent_name, team_instances.id
                 from team_instances) as team_instances_2
       on team_instances_2.id = matches.team_2_id
   WHERE   --       tournaments.competition_id = 16 and tournaments.id = 199 AND
-         ends.end_num > 0 AND matches.end_info_available = true;
+         ends.end_num > 0 AND matches.end_info_available = true
+  ;
 
 
 
 DROP VIEW MATCH_END_SCORES;
 
 create or REPLACE view MATCH_END_SCORES as
-  SELECT match, end_score, end_winner_id, team_1_id, won as team_1_won_match From MATCH_ENDS
+  SELECT match, end_score, end_winner_id, team_1_id, team_1_won as team_1_won_match From MATCH_ENDS
   --where end_score = 3
   --  where match = 14516
-  GROUP BY match, end_score, end_winner_id, team_1_id, won;
+  GROUP BY match, end_score, end_winner_id, team_1_id, team_1_won;
 
 
 -- computes the probablity of winning a game if we scored X in any end.
@@ -150,10 +173,10 @@ select true_stmts, universe, true_stmts::FLOAT / universe as probability
 from
   (SELECT count(match) as universe
                 from MATCH_END_SCORES
-                where end_score = 7) as total,
+                where end_score = 3) as total,
   (select count(match) as true_stmts
             FROM MATCH_END_SCORES
-            where end_score = 7 and ((end_winner_id = team_1_id and team_1_won_match = 1) or
+            where end_score = 3 and ((end_winner_id = team_1_id and team_1_won_match = 1) or
                                      (end_winner_id != team_1_id and team_1_won_match = -1))) as truth_
 GROUP BY universe, true_stmts;
 
