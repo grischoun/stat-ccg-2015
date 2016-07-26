@@ -15,6 +15,9 @@ $$ LANGUAGE SQL;
 
 DROP VIEW MATCH_ENDS CASCADE ;
 
+
+select end_num from ends where ends.match_id = 1
+
 --
 CREATE OR REPLACE VIEW MATCH_ENDS AS
   WITH scores as (select
@@ -27,21 +30,15 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
                     inner join ends e on e.match_id = m.id
                   GROUP BY m.id, e.team_instance_id),
     score_deltas as (select
-                       CASE WHEN SUM(e2.score) IS NULL THEN 0
-                       ELSE SUM(e2.score)
-                       END as team_score,
                        m.id as m_id,
-                       e.team_instance_id as team_id,
-                       e.end_num
---                       , e2.end_num AS end_num_2, e2.score
+                       ti.id as team_id,
+                       e.end_num,
+                       sum(e2.score) as team_score
                      from matches m
-                       inner join ends e on e.match_id = m.id
-                       INNER JOIN ends e2 on e2.match_id = m.id and e2.end_num <= e.end_num and e2.team_instance_id = e.team_instance_id
-                     where m.id = 1
-                     GROUP BY m.id, e.team_instance_id, e.id --, e2.id
-
-
-    )
+                       INNER JOIN team_instances ti on (m.team_1_id = ti.id OR m.team_2_id = ti.id)
+                       LEFT JOIN ends e on e.match_id = m.id
+                       LEFT JOIN ends e2 on e2.match_id = m.id and e2.end_num <= e.end_num and e2.team_instance_id = ti.id
+                     GROUP BY m.id, ti.id, e.end_num)
   SELECT tournaments.id as tourn_id,
     matches.id as Match,
     team_instances.id as team_instance_id,
@@ -148,8 +145,8 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
       on temp_scores.m_id = matches.id and matches.team_1_id = temp_scores.team_id
     INNER JOIN (SELECT team_score as opponent_score, * from scores) as temp_scores_2
       on temp_scores_2.m_id = matches.id and matches.team_2_id = temp_scores_2.team_id
-    INNER JOIN (SELECT team_score as score_delta, * from scores where scores.end_num <= end_num_test) as temp_scores_3
-      ON temp_scores_3.m_id = matches.id
+    INNER JOIN (SELECT team_score as score_delta, * from score_deltas) as temp_score_deltas
+      ON temp_score_deltas.m_id = matches.id
     INNER JOIN (SELECT team_instances."desc" as opponent_name, team_instances.id
                 from team_instances) as team_instances_2
       on team_instances_2.id = matches.team_2_id
