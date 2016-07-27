@@ -38,7 +38,9 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
                        INNER JOIN team_instances ti on (m.team_1_id = ti.id OR m.team_2_id = ti.id)
                        LEFT JOIN ends e on e.match_id = m.id
                        LEFT JOIN ends e2 on e2.match_id = m.id and e2.end_num <= e.end_num and e2.team_instance_id = ti.id
-                     GROUP BY m.id, ti.id, e.end_num)
+                     -- where m.id = 1
+                     GROUP BY m.id, ti.id, e.end_num
+    )
   SELECT tournaments.id as tourn_id,
     matches.id as Match,
     team_instances.id as team_instance_id,
@@ -57,7 +59,11 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
     ELSE 0
     END as team_1_won,
     -- team_1 score - team_2 score at the current end.
-    score_delta,
+    temp_team_1_score - temp_team_2_score as score_delta,
+    -- team_1 total score at current end
+    temp_team_1_score,
+    -- team_2 total score at current end
+    temp_team_2_score,
     -- current team ends for current match (excluding ends for extra ends)
     (SELECT CASE WHEN COUNT(e2.id) IS NULL THEN 0
     ELSE COUNT(e2.id)
@@ -145,8 +151,13 @@ CREATE OR REPLACE VIEW MATCH_ENDS AS
       on temp_scores.m_id = matches.id and matches.team_1_id = temp_scores.team_id
     INNER JOIN (SELECT team_score as opponent_score, * from scores) as temp_scores_2
       on temp_scores_2.m_id = matches.id and matches.team_2_id = temp_scores_2.team_id
-    INNER JOIN (SELECT team_score as score_delta, * from score_deltas) as temp_score_deltas
-      ON temp_score_deltas.m_id = matches.id
+    INNER JOIN (SELECT team_score as temp_team_1_score, * from score_deltas) as temp_score_deltas
+      ON temp_score_deltas.m_id = matches.id and temp_score_deltas.team_id = matches.team_1_id and
+         temp_score_deltas.end_num = ends.end_num
+    INNER JOIN (SELECT team_score as temp_team_2_score, * from score_deltas) as temp_score_deltas_2
+      ON temp_score_deltas_2.m_id = matches.id and
+      temp_score_deltas_2.team_id = matches.team_2_id and
+         temp_score_deltas_2.end_num = ends.end_num
     INNER JOIN (SELECT team_instances."desc" as opponent_name, team_instances.id
                 from team_instances) as team_instances_2
       on team_instances_2.id = matches.team_2_id
@@ -180,7 +191,8 @@ GROUP BY universe, true_stmts;
 
 
 SELECT * From MATCH_ENDS
---where match = 14510;
+where match = 14510;
+--where match = 1;
 
 select * FROM team_instances where id = 4995;
 
