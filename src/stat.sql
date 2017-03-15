@@ -108,6 +108,8 @@ CREATE OR REPLACE VIEW ENDS_PIERRES AS
                  INNER JOIN teams ON teams.id = team_instances.team_id
                  LEFT JOIN ends ON (ends.team_instance_id = team_instances.id AND matches.id = ends.match_id)
                  INNER JOIN match_configurations on matches.match_configuration_id = match_configurations.id
+            -- !!! Don't add 'AND ends.score <> -1' below because that would exclude rows where the team_instance did not have any ends (i.e. where 'ends.score ISNULL')
+            -- '.end_info_available = true' means that the match was not a forfeit
             WHERE tournaments.competition_id = 22 AND matches.end_info_available = true
             GROUP BY tournaments.id, matches.id, team_instances.id, number_of_ends, round_num;
 
@@ -152,8 +154,8 @@ CREATE OR REPLACE VIEW ENDS_V AS
 
 -- DROP VIEW SCORES;
 
--- The difference between this and ENDS_PIERRES is that here we show only *one* entry per match
--- (whereas ENDS_PIERRES shows two entries per match: one for team_1 and one for team_2
+-- The difference between this and ENDS_PIERRES is that here we show only *one* entry/row per match
+-- (whereas ENDS_PIERRES shows two entries/rows per match: one for team_1 and one for team_2
 CREATE OR REPLACE VIEW SCORES AS
   SELECT tournaments.id as tourn_id, matches.id as Match,
                    team_instances.id as team_instance_id,
@@ -220,7 +222,10 @@ CREATE OR REPLACE VIEW SCORES AS
                  INNER JOIN teams ON teams.id = team_instances.team_id
                  LEFT JOIN ends ON (ends.team_instance_id = team_instances.id AND matches.id = ends.match_id)
                  INNER JOIN match_configurations on matches.match_configuration_id = match_configurations.id
-            WHERE tournaments.competition_id = 22 AND ends.score <> -1 AND ends.end_num > 0 AND matches.end_info_available = true
+-- TODO: Do we also have to remove the ends.score and ends.end_num constraints below as we did for view ENDS_PIERRES?
+            WHERE tournaments.competition_id = 22 AND matches.end_info_available = true
+                  AND ends.score <> -1 -- NOTICE: will exclude rows where 'ends.score ISNULL'
+                  AND ends.end_num > 0
             GROUP BY tournaments.id, matches.id, team_instances.id, number_of_ends, round_num;
 
 
