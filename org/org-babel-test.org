@@ -1,3 +1,5 @@
+** COMMENT How-to Startup
+- need the same start-up processus as with gorilla repl.
 
 ** PROBABILITE
 
