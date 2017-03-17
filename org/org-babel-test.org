@@ -58,3 +58,15 @@ ts ls matches qui contiennent un coup de 3
 #+CAPTION: "Delta Score - Ligue A"
 #+NAME: fig:total-score-all
 [[./img/delta-A.png]]
+
+
+
+** COMMENT Test showing multiple histograms
+#+begin_src clojure :results none :exports none
+(use '(incanter core charts stats datasets))
+(doto (histogram (sample-normal 1000)
+                 :legend true)
+  view
+  (add-histogram (sample-normal 1000 :sd 0.5))
+  (save "./img/delta-X.png"))
+#+end_src

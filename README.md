@@ -23,7 +23,7 @@
 ;; (plot/bar-chart categories values)
 ;;
 ;; -- online viewer
-;;http://viewer.gorilla-repl.org/view.html?source=github&user=grischoun&repo=stat-ccg-2014&path=ws/main.clj
+;;http://viewer.gorilla-repl.org/view.html?source=github&user=grischoun&repo=stat-ccg-2015&path=stat-ccg-html.clj
 ;;
 ;; to reload a worksheet in the online viewer: ctrl-g ctrl-l
 ;;

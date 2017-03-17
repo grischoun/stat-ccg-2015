@@ -10,7 +10,7 @@ JOIN tournaments ON competitions.id = tournaments.competition_id
 JOIN rounds ON tournaments.id = rounds.tournament_id
   JOIN groups ON rounds.id = groups.round_id
   JOIN matches ON groups.id = matches.group_id
-where competition_id = 22; -- Replace competition_id with the right year
+where competition_id = 16; -- Replace competition_id with the right year
 
 -- drop view ENDS_PIERRES;
 
@@ -108,9 +108,9 @@ CREATE OR REPLACE VIEW ENDS_PIERRES AS
                  INNER JOIN teams ON teams.id = team_instances.team_id
                  LEFT JOIN ends ON (ends.team_instance_id = team_instances.id AND matches.id = ends.match_id)
                  INNER JOIN match_configurations on matches.match_configuration_id = match_configurations.id
-            -- !!! Don't add 'AND ends.score <> -1' below because that would exclude rows where the team_instance did not have any ends (i.e. where 'ends.score ISNULL')
+            -- !!! Don't add 'AND ends.score <> -1' below because that would exclude rows where the team_instance did not have any ends (i.e. where ends.score ISNULL)
             -- '.end_info_available = true' means that the match was not a forfeit
-            WHERE tournaments.competition_id = 22 AND matches.end_info_available = true
+            WHERE tournaments.competition_id = 16 AND matches.end_info_available = true
             GROUP BY tournaments.id, matches.id, team_instances.id, number_of_ends, round_num;
 
 -- drop view ENDS_PIERRES;
@@ -130,7 +130,7 @@ CREATE OR REPLACE VIEW MATCHES_V AS
     JOIN rounds ON tournaments.id = rounds.tournament_id
     JOIN groups ON rounds.id = groups.round_id
     JOIN matches ON groups.id = matches.group_id
-  WHERE competition_id = 22 AND matches.end_info_available = TRUE;
+  WHERE competition_id = 16 AND matches.end_info_available = TRUE;
 
 -- DROP VIEW ENDS_V;
 
@@ -149,7 +149,7 @@ CREATE OR REPLACE VIEW ENDS_V AS
     updated_at
   FROM MATCHES_V m
     JOIN ends ON m.match_id = ends.match_id
-  WHERE competition_id = 22 AND ends.score <> -1 AND ends.end_num > 0;
+  WHERE competition_id = 16 AND ends.score <> -1 AND ends.end_num > 0;
 
 
 -- DROP VIEW SCORES;
@@ -223,8 +223,9 @@ CREATE OR REPLACE VIEW SCORES AS
                  LEFT JOIN ends ON (ends.team_instance_id = team_instances.id AND matches.id = ends.match_id)
                  INNER JOIN match_configurations on matches.match_configuration_id = match_configurations.id
 -- TODO: Do we also have to remove the ends.score and ends.end_num constraints below as we did for view ENDS_PIERRES?
-            WHERE tournaments.competition_id = 22 AND matches.end_info_available = true
-                  AND ends.score <> -1 -- NOTICE: will exclude rows where 'ends.score ISNULL'
+            WHERE tournaments.competition_id = 16 AND matches.end_info_available = true
+                  -- NOTICE: will exclude rows where 'ends.score ISNULL'
+                  AND ends.score <> -1
                   AND ends.end_num > 0
             GROUP BY tournaments.id, matches.id, team_instances.id, number_of_ends, round_num;
 
@@ -242,7 +243,7 @@ CREATE OR REPLACE VIEW END_COUNT AS
     JOIN matches ON groups.id = matches.group_id
     JOIN ends ON matches.id = ends.match_id
     -- end_num > 0 removes the handicap end
-  WHERE competition_id = 22 AND ends.score <> -1 AND ends.end_num > 0 AND matches.end_info_available = TRUE
+  WHERE competition_id = 16 AND ends.score <> -1 AND ends.end_num > 0 AND matches.end_info_available = TRUE
   GROUP BY matches.id;
 
 
@@ -409,7 +410,7 @@ FROM (SELECT *, CASE WHEN team_score > opponent_score THEN color1
                INNER JOIN teams ON teams.id = team_instances.team_id
                LEFT JOIN ends ON (ends.team_instance_id = team_instances.id AND matches.id = ends.match_id)
                INNER JOIN match_configurations ON matches.match_configuration_id = match_configurations.id
-             WHERE tournaments.competition_id = 22 AND ends.score <> -1 AND ends.end_num > 0 AND matches.end_info_available = TRUE
+             WHERE tournaments.competition_id = 16 AND ends.score <> -1 AND ends.end_num > 0 AND matches.end_info_available = TRUE
              GROUP BY matches.id
            ) AS main) as second
 WHERE winner_color  NOTNULL
